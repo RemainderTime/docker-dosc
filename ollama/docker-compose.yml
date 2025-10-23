@@ -1,0 +1,10 @@
+version: '3'
+services:
+  ollama:
+    image: ollama/ollama:0.12.6
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+
+# 拉取大模型命令：ollama pull deepseek-r1:1.5b
