@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8
+    container_name: clickhouse-server
+    restart: unless-stopped
+    ports:
+      - "8123:8123"   # HTTP 接口
+      - "9000:9000"   # TCP 接口
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./data:/var/lib/clickhouse      # 数据持久化
+      - ./logs:/var/log/clickhouse-server
+      - ./tmp:/var/lib/clickhouse/tmp
+      - ./config/config.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+
+
+#详细部署步骤参考：https://blog.csdn.net/qq_39818325/article/details/151935920
