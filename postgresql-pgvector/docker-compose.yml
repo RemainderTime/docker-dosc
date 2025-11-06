@@ -10,6 +10,7 @@ services:
       - POSTGRES_DB=springai
       - PGPASSWORD=postgres
     volumes:
+      - ./pgvector/data:/var/lib/postgresql/data  # 添加这行，保证数据持久化
       - ./pgvector/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     logging:
       options:
