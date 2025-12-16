@@ -1,0 +1,66 @@
+version: '3.8'
+services:
+  rmqnamesrv:
+    image: apache/rocketmq:5.2.0
+    container_name: rmqnamesrv
+    ports:
+      - 9876:9876
+    restart: always
+    privileged: true
+    volumes:
+      - /home/docker/rocketmq/namesrv/logs:/home/rocketmq/logs
+      - /home/docker/rocketmq/namesrv/bin/runserver.sh:/home/rocketmq/rocketmq-5.2.0/bin/runserver.sh
+    environment:
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    command: ["sh","mqnamesrv"]
+  rmqbroker:
+    image: apache/rocketmq:5.2.0
+    container_name: rmqbroker
+    ports:
+      - 10911:10911
+      - 10908:10908
+    restart: always
+    privileged: true
+    volumes:
+      - /home/docker/rocketmq/broker/logs:/home/rocketmq/logs
+      - /home/docker/rocketmq/broker/store:/home/rocketmq/store
+      - /home/docker/rocketmq/broker/conf/broker.conf:/home/rocketmq/rocketmq-5.2.0/conf/broker.conf
+      - /home/docker/rocketmq/broker/bin/runbroker.sh:/home/rocketmq/rocketmq-5.2.0/bin/runbroker.sh
+    depends_on:
+      - 'rmqnamesrv'
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    command: ["sh","mqbroker","-c","/home/rocketmq/rocketmq-5.2.0/conf/broker.conf"]
+  rmqbroker-slave:
+    image: apache/rocketmq:5.2.0
+    container_name: rmqbroker-slave
+    ports:
+      - 10912:10912
+    restart: always
+    privileged: true
+    volumes:
+      - /home/docker/rocketmq/broker-slave/logs:/home/rocketmq/logs
+      - /home/docker/rocketmq/broker-slave/store:/home/rocketmq/store
+      - /home/docker/rocketmq/broker-slave/conf/broker.conf:/home/rocketmq/rocketmq-5.2.0/conf/broker.conf
+      - /home/docker/rocketmq/broker-slave/bin/runbroker.sh:/home/rocketmq/rocketmq-5.2.0/bin/runbroker.sh
+    depends_on:
+      - 'rmqnamesrv'
+    environment:
+      - NAMESRV_ADDR=rmqnamesrv:9876
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    command: ["sh","mqbroker","-c","/home/rocketmq/rocketmq-5.2.0/conf/broker.conf"]
+  rmqdashboard:
+    image: apacherocketmq/rocketmq-dashboard:2.1.0
+    container_name: rocketmq-dashboard
+    ports:
+      - 8082:8082
+    restart: always
+    privileged: true
+    depends_on:
+      - 'rmqnamesrv'
+    environment:
+      - JAVA_OPTS= -Xmx256M -Xms256M -Xmn128M -Drocketmq.namesrv.addr=rmqnamesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
