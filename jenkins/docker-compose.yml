@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:2.528.3-lts-jdk17
+    container_name: jenkins
+    restart: always
+
+    ports:
+      - "8085:8080"
+      - "50000:50000"
+
+    environment:
+      JAVA_OPTS: -Xms256m -Xmx1024m -XX:+UseG1GC
+      JENKINS_OPTS: --prefix=/jenkins -Dhudson.model.UpdateCenter.never=true
+      TZ: Asia/Shanghai
+      MAVEN_OPTS: "-Xmx512m -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+    entrypoint: |
+      bash -c "
+      apt-get update && \
+      apt-get install -y maven && \
+      /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/local/bin/docker-compose:/usr/local/bin/docker-compose
+      - maven_repo:/root/.m2
+      - /etc/localtime:/etc/localtime:ro
+
+    user: "0:0"
+    networks:
+      - jenkins-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2.5G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+volumes:
+  jenkins_home:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/docker/jenkins/data/jenkins_home
+
+  maven_repo:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/docker/jenkins/data/maven_repo
+
+networks:
+  jenkins-network:
+    driver: bridge
