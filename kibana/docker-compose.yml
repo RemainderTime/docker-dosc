@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.18.1  # 建议与 Filebeat 版本保持一致
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - SERVER_NAME=kibana
+      # 指向你 Elasticsearch 的内网地址
+      - ELASTICSEARCH_HOSTS=http://172.16.0.3:9200
+      # 必须使用 kibana_system 这个专用账号
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD= 密码
+      # 开启中文界面
+      - I18N_LOCALE=zh-CN
+      - TZ=Asia/Shanghai
