@@ -20,18 +20,8 @@ output.elasticsearch:
   hosts: ["http://172.16.0.3:9200"]
   username: "elastic"
   password: "密码"
-
-  # 🌟 【核心架构升级】：废弃单一 index，开启按日志级别动态路由
-  indices:
-    # 规则 1：错误日志，单独分流到 error 索引（方便后续设置 90 天超长保留）
-    - index: "microservice-error-%{+yyyy.MM.dd}"
-      when.equals:
-        level: "ERROR"  # ⚠️ 注意：这里假设你的 Spring Boot JSON 日志级别字段名叫 "level"。如果叫 "log.level"，请自行修改。
-
-    # 规则 2：非错误日志 (INFO/DEBUG/WARN)，分流到 info 索引（方便后续设置 15 天自动清理）
-    - index: "microservice-info-%{+yyyy.MM.dd}"
-      when.not.equals:
-        level: "ERROR"
+  #取消分流，所有日志统一写入同一个每日索引
+  index: "microservice-logs-%{+yyyy.MM.dd}"
 
 # ================================== Setup =====================================
 # 🌟 【配置更新】：将模板匹配模式放宽，让它能同时接管 info 和 error 两类索引
