@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.1
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      # 继承咱们刚才成功跑起来的内存限制，防止服务器 OOM
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      # 开启企业级密码认证
+      - xpack.security.enabled=true
+      - TZ=Asia/Shanghai
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      # 精准匹配你截图中的宿主机物理路径
+      - /home/docker/elasticsearch/data:/usr/share/elasticsearch/data
+      - /home/docker/elasticsearch/logs:/usr/share/elasticsearch/logs
+      - /home/docker/elasticsearch/plugins:/usr/share/elasticsearch/plugins
+      - /home/docker/elasticsearch/config:/usr/share/elasticsearch/config
