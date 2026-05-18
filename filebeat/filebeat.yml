@@ -1,0 +1,40 @@
+# ============================== Filebeat inputs ===============================
+filebeat.inputs:
+  - type: filestream
+    id: microservice-logs
+    enabled: true
+    # 监控容器内部映射进来的微服务日志路径
+    paths:
+      - /var/log/microservices/*/*.json
+
+    # 核心：直接把 JSON 日志平铺解析
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+          message_key: message
+
+# ================================== Outputs ===================================
+output.elasticsearch:
+  # 这里填你 ES 所在的宿主机 IP 和暴露的端口
+  hosts: ["http://172.16.0.3:9200"]
+  username: "elastic"
+  password: "密码"
+
+  # 🌟 【核心架构升级】：废弃单一 index，开启按日志级别动态路由
+  indices:
+    # 规则 1：错误日志，单独分流到 error 索引（方便后续设置 90 天超长保留）
+    - index: "microservice-error-%{+yyyy.MM.dd}"
+      when.equals:
+        level: "ERROR"  # ⚠️ 注意：这里假设你的 Spring Boot JSON 日志级别字段名叫 "level"。如果叫 "log.level"，请自行修改。
+
+    # 规则 2：非错误日志 (INFO/DEBUG/WARN)，分流到 info 索引（方便后续设置 15 天自动清理）
+    - index: "microservice-info-%{+yyyy.MM.dd}"
+      when.not.equals:
+        level: "ERROR"
+
+# ================================== Setup =====================================
+# 🌟 【配置更新】：将模板匹配模式放宽，让它能同时接管 info 和 error 两类索引
+setup.template.name: "microservice"
+setup.template.pattern: "microservice-*"
+setup.ilm.enabled: false

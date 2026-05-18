@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.18.1  # 尽量和你的 ES 版本保持一致
+    container_name: filebeat
+    restart: always
+    user: root  # 使用 root 用户启动，防止读取宿主机日志时报 Permission denied
+    # 关键点：关闭严格的配置文件权限检查，否则由于宿主机权限问题可能导致启动失败
+    command: filebeat -e --strict.perms=false
+    volumes:
+      # 1. 挂载配置文件 (只读)
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # 2. 挂载微服务日志目录 (只读)，将宿主机的路径映射到容器内的 /var/log/microservices
+      - /data/servers/logs:/var/log/microservices:ro
+      # 3. 挂载 filebeat 的 data 目录，记录它读到了哪里（断点续传的关键，即使重启也不会重复发日志）
+      - ./data:/usr/share/filebeat/data
+    environment:
+      - TZ=Asia/Shanghai
