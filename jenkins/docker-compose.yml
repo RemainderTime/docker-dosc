@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   jenkins:
-    image: jenkins/jenkins:2.528.3-lts-jdk17
+    build: .                 # 改为通过当前目录的 Dockerfile 构建镜像
     container_name: jenkins
     restart: always
 
@@ -15,12 +15,8 @@ services:
       JENKINS_OPTS: --prefix=/jenkins -Dhudson.model.UpdateCenter.never=true
       TZ: Asia/Shanghai
       MAVEN_OPTS: "-Xmx512m -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
-    entrypoint: |
-      bash -c "
-      apt-get update && \
-      apt-get install -y maven && \
-      /usr/bin/tini -- /usr/local/bin/jenkins.sh
-      "
+
+    # 删除了 entrypoint，使用镜像默认的启动脚本
 
     volumes:
       - jenkins_home:/var/jenkins_home
@@ -35,7 +31,8 @@ services:
       - jenkins-network
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      # 修复了这里的请求路径，增加了 /jenkins 前缀
+      test: ["CMD", "curl", "-f", "http://localhost:8080/jenkins/login"]
       interval: 30s
       timeout: 10s
       retries: 5
