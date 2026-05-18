@@ -25,6 +25,6 @@ output.elasticsearch:
 
 # ================================== Setup =====================================
 # 🌟 【配置更新】：将模板匹配模式放宽，让它能同时接管 info 和 error 两类索引
-setup.template.name: "microservice"
-setup.template.pattern: "microservice-*"
+setup.template.name: "microservice-logs"
+setup.template.pattern: "microservice-logs-*"
 setup.ilm.enabled: false
