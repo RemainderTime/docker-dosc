@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  nacos:
+    image: nacos/nacos-server:latest
+    container_name: nacos
+    restart: always
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone          # 强制单机模式运行
+      # 🌟 核心：注入我们刚才确定的“瘦身”内存参数
+      - JVM_XMS=256m             # 初始堆内存
+      - JVM_XMX=256m             # 最大堆内存
+      - JVM_XMN=128m             # 年轻代内存
+      - TZ=Asia/Shanghai
+    volumes:
+      # 精准映射你截图中的宿主机物理路径，完美保留历史数据
+      - /home/docker/nacos/logs:/home/nacos/logs
+      - /home/docker/nacos/data:/home/nacos/data
+      - /home/docker/nacos/conf:/home/nacos/conf
+    ports:
+      - "8848:8848"   # Nacos 主控制台和 HTTP 接口端口
+      - "9848:9848"   # 🌟 Nacos 2.x 客户端 gRPC 端口 (Spring Boot 微服务必备)
+      - "9849:9849"   # 🌟 Nacos 2.x 服务端 gRPC 端口集群同步 (单机模式下其实也可省略，但建议配上)
